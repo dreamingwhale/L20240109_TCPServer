@@ -4,7 +4,7 @@
 #pragma comment(lib,"ws2_32")
 
 using namespace std;
-int main()
+void practice()
 {
 	WSAData wsaData;
 	int Result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -99,8 +99,5 @@ int main()
 	closesocket(ClientSocket);
 	closesocket(ListenSocket);
 	WSACleanup();
-
-
-	return 0;
 
 }
