@@ -1,20 +1,15 @@
+#define _CRT_SECURE_NO_WARNINGS
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+
 #include <iostream>
 #include <winsock2.h>
 #include <WS2tcpip.h>
+#include "Packet.h"
 
 using namespace std;
 
 #pragma comment(lib, "ws2_32")
 
-#pragma pack(push, 1)
-
-typedef struct _Data
-{
-	int FirstNumber;
-	int SecondNumber;
-	char Operator;
-} Data;
-#pragma pack(pop)
 
 int main()
 {
@@ -44,6 +39,12 @@ int main()
 	{
 		//char Message[9] = { 0, };
 
+		Header DataHeader;
+		DataHeader.Length = sizeof(Data);
+		DataHeader.PacketType = (unsigned short)(EPacketType::Calculate);
+
+		send(ClientSocket, (char*)&DataHeader, (u_int)sizeof(DataHeader), 0);
+
 		Data Packet;
 		// 0 ~ 9999
 		Packet.FirstNumber = (rand() % 20000) - 10000;
@@ -59,6 +60,7 @@ int main()
 
 		send(ClientSocket, (char*)&Packet, (u_int)sizeof(Packet), 0);
 
+		//
 		char Buffer[1024] = { 0, };
 		int RecvByte = recv(ClientSocket, Buffer, 1024, 0);
 		if (RecvByte <= 0)
@@ -69,6 +71,28 @@ int main()
 		long long Result = 0;
 		memcpy(&Result, Buffer, sizeof(Result));
 		cout << Result << endl;
+
+		/////////////////File send///////////////
+
+		FILE* InputFile = fopen("chicken.jpg", "rb");
+		fseek(InputFile, 0, SEEK_END);
+		unsigned short FileSize =(unsigned short) ftell(InputFile);
+
+		DataHeader.Length = FileSize;
+		DataHeader.PacketType = (unsigned short)(EPacketType::Image);
+
+		send(ClientSocket, (char*)&DataHeader, (u_int)sizeof(DataHeader), 0);
+
+
+		char* FileBuffer = new char[FileSize];
+		fseek(InputFile, 0, SEEK_SET);
+		size_t ReadSize = fread(FileBuffer, sizeof(char), (int)FileSize, InputFile);
+		int SendSize = send(ClientSocket, FileBuffer, (int)ReadSize, 0);
+
+
+		fclose(InputFile);
+
+		delete[]FileBuffer;
 	}
 
 	closesocket(ClientSocket);
