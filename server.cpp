@@ -20,6 +20,7 @@ int main()
 
 	SOCKET ListenSocket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
+
 	struct sockaddr_in ListenSockAddr;
 	memset(&ListenSockAddr, 0, sizeof(ListenSockAddr));
 	ListenSockAddr.sin_family = AF_INET;
@@ -47,6 +48,7 @@ int main()
 
 		Data Packet;
 		// 0 ~ 9999
+
 		Packet.FirstNumber = (rand() % 20000) - 10000;
 		// 1 ~ 9999
 		Packet.SecondNumber = (rand() % 20000) - 10000;
@@ -68,9 +70,16 @@ int main()
 			break;
 		}
 
+		Header PacketHeader;
+		memcpy(&PacketHeader, Buffer, sizeof(Header));
+
 		long long Result = 0;
 		memcpy(&Result, Buffer, sizeof(Result));
-		cout << Result << endl;
+		if (PacketHeader.PacketType == (unsigned short)EPacketType::Calculate)
+		{
+			cout << Result << endl;
+
+		}
 
 		/////////////////File send///////////////
 
@@ -89,7 +98,19 @@ int main()
 		size_t ReadSize = fread(FileBuffer, sizeof(char), (int)FileSize, InputFile);
 		int SendSize = send(ClientSocket, FileBuffer, (int)ReadSize, 0);
 
+		/////////////////////////Move//////////////////////////
 
+
+		if (PacketHeader.PacketType == (unsigned short)EPacketType::Move)
+		{
+			char* DataBuffer = new char[PacketHeader.Length];
+			int RecvByte = recv(ClientSocket, DataBuffer, PacketHeader.Length, MSG_WAITALL);
+
+			memcpy(&Packet, DataBuffer, sizeof(Packet));
+
+			cout << "FirstNumber : " <<(int) Packet.FirstNumber << endl;
+			cout << "SecondNumber : " << (int)Packet.SecondNumber << endl;
+		}
 		fclose(InputFile);
 
 		delete[]FileBuffer;

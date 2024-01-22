@@ -6,6 +6,7 @@ enum class EPacketType
 {
 	Calculate = 10
 	, Image = 20
+	, Move = 30
 	, MAX
 };
 
